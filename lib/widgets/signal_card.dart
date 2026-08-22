@@ -48,8 +48,7 @@ class SignalCard extends StatelessWidget {
     final hour = t.hour.toString().padLeft(2, '0');
     final minute = t.minute.toString().padLeft(2, '0');
     final day = t.day.toString().padLeft(2, '0');
-    final month = t.month.toString().padLeft(2, '0');
-    return '$day/$month/${t.year} — $hour:$minute';
+    return 'يوم $day — الساعة $hour:$minute';
   }
 
   Widget _tradeStatusBanner() {
