@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/candle.dart';
 import '../models/scenario_result.dart';
+import '../models/journal_entry.dart';
 import '../services/binance_api.dart';
+import '../services/journal_service.dart';
 import 'wyckoff_filter.dart';
 import 'ict_zones.dart';
 import 'scenario_breakout.dart';
@@ -13,6 +15,7 @@ import 'mtf_confluence.dart';
 
 class SignalEngine {
   final BinanceApi api = BinanceApi();
+  final JournalService journal = JournalService();
 
   Future<DailySignal> getTodaySignal(String symbol) async {
     DailySignal signal;
@@ -23,6 +26,16 @@ class SignalEngine {
     } else {
       signal = await _generateNewSignal(symbol);
       await _persistSignal(symbol, signal);
+      if (signal.scenario.entry != null) {
+        await journal.upsertPending(JournalEntry(
+          symbol: symbol,
+          dateKey: _todayKey(),
+          scenarioType: signal.scenario.type.toString(),
+          strength: signal.strength.toString(),
+          timeframePair: signal.timeframePair,
+          score: signal.scenario.score,
+        ));
+      }
     }
 
     if (signal.scenario.entry != null) {
@@ -30,9 +43,15 @@ class SignalEngine {
         final currentPrice = await api.getCurrentPrice(symbol);
         signal.currentPrice = currentPrice;
         signal.tradeStatus = _computeTradeStatus(signal.scenario, currentPrice);
-      } catch (_) {
-        // If price fetch fails, keep previous status/no status change
-      }
+
+        if (signal.tradeStatus == TradeStatus.hitStopLoss) {
+          await journal.updateResult(symbol, _todayKey(), JournalResult.loss);
+        } else if (signal.tradeStatus == TradeStatus.hitTp1 ||
+            signal.tradeStatus == TradeStatus.hitTp2 ||
+            signal.tradeStatus == TradeStatus.hitTp3) {
+          await journal.updateResult(symbol, _todayKey(), JournalResult.win);
+        }
+      } catch (_) {}
     }
 
     return signal;
