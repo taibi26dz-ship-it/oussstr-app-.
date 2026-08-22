@@ -1,4 +1,4 @@
-hereimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../services/journal_service.dart';
 import '../models/journal_entry.dart';
 
