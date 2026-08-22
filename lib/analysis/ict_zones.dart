@@ -1,4 +1,4 @@
-hereenum ZoneType { premium, equilibrium, discount }
+enum ZoneType { premium, equilibrium, discount }
 
 class IctZoneResult {
   final ZoneType zone;
