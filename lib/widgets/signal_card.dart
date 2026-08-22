@@ -1,4 +1,4 @@
-hereimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/scenario_result.dart';
 
 class SignalCard extends StatelessWidget {
@@ -41,6 +41,15 @@ class SignalCard extends StatelessWidget {
       case ScenarioType.none:
         return 'لا يوجد سيناريو محدد اليوم';
     }
+  }
+
+  String _formattedTime() {
+    final t = signal.generatedAt;
+    final hour = t.hour.toString().padLeft(2, '0');
+    final minute = t.minute.toString().padLeft(2, '0');
+    final day = t.day.toString().padLeft(2, '0');
+    final month = t.month.toString().padLeft(2, '0');
+    return '$day/$month/${t.year} — $hour:$minute';
   }
 
   Widget _tradeStatusBanner() {
@@ -124,6 +133,11 @@ class SignalCard extends StatelessWidget {
               Text('الأهداف: ${s.takeProfits!.map((t) => t.toStringAsFixed(4)).join(' / ')}'),
             const SizedBox(height: 8),
             Text(signal.notes, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13)),
+            const SizedBox(height: 10),
+            Text(
+              'وقت الصفقة: ${_formattedTime()}',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         ),
       ),
