@@ -1,4 +1,4 @@
-hereimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'coin_detail_screen.dart';
 import 'journal_screen.dart';
 
