@@ -1,4 +1,4 @@
-hereclass Candle {
+class Candle {
   final DateTime openTime;
   final DateTime closeTime;
   final double open;
