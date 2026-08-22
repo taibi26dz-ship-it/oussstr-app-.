@@ -1,4 +1,4 @@
-hereenum ScenarioType { breakout, retest, reversal, continuation }
+enum ScenarioType { breakout, retest, reversal, continuation }
 enum SignalStrength { strong, medium, weakForced }
 
 class ScenarioResult {
