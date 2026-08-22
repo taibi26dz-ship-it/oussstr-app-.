@@ -1,4 +1,4 @@
-hereimport '../models/candle.dart';
+import '../models/candle.dart';
 
 enum WyckoffPhase { accumulation, markup, distribution, markdown, unclear }
 
