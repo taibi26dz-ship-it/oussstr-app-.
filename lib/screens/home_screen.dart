@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+hereimport 'package:flutter/material.dart';
 import 'coin_detail_screen.dart';
+import 'journal_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,7 +9,18 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final coins = ['LINKUSDT', 'BCHUSDT'];
     return Scaffold(
-      appBar: AppBar(title: const Text('Oussstr')),
+      appBar: AppBar(
+        title: const Text('Oussstr'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            tooltip: 'سجل الأداء',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalScreen()));
+            },
+          ),
+        ],
+      ),
       body: ListView.builder(
         itemCount: coins.length,
         itemBuilder: (context, index) {
