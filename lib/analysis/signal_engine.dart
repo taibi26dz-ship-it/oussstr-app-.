@@ -15,9 +15,46 @@ class SignalEngine {
   final BinanceApi api = BinanceApi();
 
   Future<DailySignal> getTodaySignal(String symbol) async {
+    DailySignal signal;
     final persisted = await _loadPersistedSignal(symbol);
-    if (persisted != null) return persisted;
 
+    if (persisted != null) {
+      signal = persisted;
+    } else {
+      signal = await _generateNewSignal(symbol);
+      await _persistSignal(symbol, signal);
+    }
+
+    if (signal.scenario.entry != null) {
+      try {
+        final currentPrice = await api.getCurrentPrice(symbol);
+        signal.currentPrice = currentPrice;
+        signal.tradeStatus = _computeTradeStatus(signal.scenario, currentPrice);
+      } catch (_) {
+        // If price fetch fails, keep previous status/no status change
+      }
+    }
+
+    return signal;
+  }
+
+  TradeStatus _computeTradeStatus(ScenarioResult scenario, double currentPrice) {
+    final sl = scenario.stopLoss;
+    final tps = scenario.takeProfits;
+    if (sl == null) return TradeStatus.noTrade;
+
+    if (currentPrice <= sl) {
+      return TradeStatus.hitStopLoss;
+    }
+    if (tps != null && tps.isNotEmpty) {
+      if (tps.length >= 3 && currentPrice >= tps[2]) return TradeStatus.hitTp3;
+      if (tps.length >= 2 && currentPrice >= tps[1]) return TradeStatus.hitTp2;
+      if (currentPrice >= tps[0]) return TradeStatus.hitTp1;
+    }
+    return TradeStatus.active;
+  }
+
+  Future<DailySignal> _generateNewSignal(String symbol) async {
     final daily = await api.getCandles(symbol, '1d', limit: 30);
     final h1 = await api.getCandles(symbol, '1h', limit: 100);
     final h4 = await api.getCandles(symbol, '4h', limit: 60);
@@ -65,15 +102,15 @@ class SignalEngine {
     } else {
       strength = SignalStrength.weakForced;
       finalScenario = ScenarioResult(
-        type: ScenarioType.breakout,
-        triggered: true,
-        score: 40,
+        type: ScenarioType.none,
+        triggered: false,
+        score: 0,
         reason: 'No scenario reached trigger conditions on either timeframe pair today',
       );
       notes = 'No valid setup triggered — manual review recommended, consider skipping today';
     }
 
-    final signal = DailySignal(
+    return DailySignal(
       symbol: symbol,
       timeframePair: bestPair,
       scenario: finalScenario,
@@ -81,9 +118,6 @@ class SignalEngine {
       generatedAt: DateTime.now(),
       notes: notes,
     );
-
-    await _persistSignal(symbol, signal);
-    return signal;
   }
 
   Map<ScenarioType, ScenarioResult> _evaluatePair({
