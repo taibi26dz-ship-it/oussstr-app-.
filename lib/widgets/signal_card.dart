@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+hereimport 'package:flutter/material.dart';
 import '../models/scenario_result.dart';
 
 class SignalCard extends StatelessWidget {
@@ -38,7 +38,54 @@ class SignalCard extends StatelessWidget {
         return 'ارتداد من الدعم';
       case ScenarioType.continuation:
         return 'استمرار الاتجاه';
+      case ScenarioType.none:
+        return 'لا يوجد سيناريو محدد اليوم';
     }
+  }
+
+  Widget _tradeStatusBanner() {
+    String label;
+    Color color;
+    switch (signal.tradeStatus) {
+      case TradeStatus.noTrade:
+        return const SizedBox.shrink();
+      case TradeStatus.active:
+        label = '⏳ الصفقة نشطة حالياً';
+        color = Colors.blue;
+        break;
+      case TradeStatus.hitStopLoss:
+        label = '❌ تم ضرب وقف الخسارة';
+        color = Colors.red;
+        break;
+      case TradeStatus.hitTp1:
+        label = '✅ تم تحقيق الهدف الأول (TP1)';
+        color = Colors.green;
+        break;
+      case TradeStatus.hitTp2:
+        label = '✅ تم تحقيق الهدف الثاني (TP2)';
+        color = Colors.green;
+        break;
+      case TradeStatus.hitTp3:
+        label = '✅ تم تحقيق الهدف الثالث (TP3)';
+        color = Colors.green;
+        break;
+    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold))),
+          if (signal.currentPrice != null)
+            Text('السعر: ${signal.currentPrice!.toStringAsFixed(4)}', style: TextStyle(color: color, fontSize: 12)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -66,7 +113,8 @@ class SignalCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
+            _tradeStatusBanner(),
             Text('السيناريو: ${_scenarioLabel()}', style: const TextStyle(fontSize: 15)),
             Text('الفريم: ${signal.timeframePair == 'daily_1h' ? 'يومي → 1H' : '4H → 15m'}'),
             const Divider(),
