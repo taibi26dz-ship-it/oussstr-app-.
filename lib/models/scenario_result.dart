@@ -1,5 +1,6 @@
-enum ScenarioType { breakout, retest, reversal, continuation }
+enum ScenarioType { breakout, retest, reversal, continuation, none }
 enum SignalStrength { strong, medium, weakForced }
+enum TradeStatus { noTrade, active, hitStopLoss, hitTp1, hitTp2, hitTp3 }
 
 class ScenarioResult {
   final ScenarioType type;
@@ -35,6 +36,8 @@ class DailySignal {
   final SignalStrength strength;
   final DateTime generatedAt;
   final String notes;
+  TradeStatus tradeStatus;
+  double? currentPrice;
 
   DailySignal({
     required this.symbol,
@@ -43,6 +46,8 @@ class DailySignal {
     required this.strength,
     required this.generatedAt,
     required this.notes,
+    this.tradeStatus = TradeStatus.noTrade,
+    this.currentPrice,
   });
 
   Map<String, dynamic> toJson() => {
