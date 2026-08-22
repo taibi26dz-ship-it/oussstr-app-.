@@ -25,7 +25,7 @@ jobs:
 
       - name: Set Kotlin version
         run: |
-          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.22'/" android/build.gradle
+          sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\"/id \"org.jetbrains.kotlin.android\" version \"1.9.22\"/" android/settings.gradle
 
       - name: Ensure INTERNET permission
         run: |
