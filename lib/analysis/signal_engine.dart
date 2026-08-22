@@ -1,4 +1,4 @@
-import 'dart:convert';
+hereimport 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/candle.dart';
 import '../models/scenario_result.dart';
@@ -40,9 +40,16 @@ class SignalEngine {
 
     if (signal.scenario.entry != null) {
       try {
+        final entryTfInterval = signal.timeframePair == 'daily_1h' ? '1h' : '15m';
+        final candles = await api.getCandles(symbol, entryTfInterval, limit: 100);
         final currentPrice = await api.getCurrentPrice(symbol);
         signal.currentPrice = currentPrice;
-        signal.tradeStatus = _computeTradeStatus(signal.scenario, currentPrice);
+
+        signal.tradeStatus = _computeTradeStatusOverPeriod(
+          scenario: signal.scenario,
+          candlesSinceSignal: candles.where((c) => c.openTime.isAfter(signal.generatedAt)).toList(),
+          currentPrice: currentPrice,
+        );
 
         if (signal.tradeStatus == TradeStatus.hitStopLoss) {
           await journal.updateResult(symbol, _todayKey(), JournalResult.loss);
@@ -57,20 +64,48 @@ class SignalEngine {
     return signal;
   }
 
-  TradeStatus _computeTradeStatus(ScenarioResult scenario, double currentPrice) {
+  /// يفحص كل شمعة منذ توليد الإشارة بترتيبها الزمني، ويحدد أول حدث صار فعلياً
+  /// (ضرب SL أو تحقيق TP)، بدل الاكتفاء بمقارنة السعر اللحظي الحالي فقط.
+  TradeStatus _computeTradeStatusOverPeriod({
+    required ScenarioResult scenario,
+    required List<Candle> candlesSinceSignal,
+    required double currentPrice,
+  }) {
     final sl = scenario.stopLoss;
     final tps = scenario.takeProfits;
     if (sl == null) return TradeStatus.noTrade;
 
-    if (currentPrice <= sl) {
-      return TradeStatus.hitStopLoss;
+    TradeStatus reached = TradeStatus.active;
+
+    for (final c in candlesSinceSignal) {
+      // لو الشمعة لمست SL بأي وقت (سواء لسه غير مغلقة)، تعتبر الصفقة انتهت بخسارة
+      if (c.low <= sl) {
+        return TradeStatus.hitStopLoss;
+      }
+      if (tps != null && tps.isNotEmpty) {
+        if (tps.length >= 3 && c.high >= tps[2]) {
+          reached = TradeStatus.hitTp3;
+        } else if (tps.length >= 2 && c.high >= tps[1] && reached != TradeStatus.hitTp3) {
+          reached = TradeStatus.hitTp2;
+        } else if (c.high >= tps[0] &&
+            reached != TradeStatus.hitTp3 &&
+            reached != TradeStatus.hitTp2) {
+          reached = TradeStatus.hitTp1;
+        }
+      }
     }
-    if (tps != null && tps.isNotEmpty) {
-      if (tps.length >= 3 && currentPrice >= tps[2]) return TradeStatus.hitTp3;
-      if (tps.length >= 2 && currentPrice >= tps[1]) return TradeStatus.hitTp2;
-      if (currentPrice >= tps[0]) return TradeStatus.hitTp1;
+
+    // احتياط: لو ما فيه شموع بعد (مثلاً أول دقائق بعد توليد الإشارة)، نستخدم السعر الحالي
+    if (candlesSinceSignal.isEmpty) {
+      if (currentPrice <= sl) return TradeStatus.hitStopLoss;
+      if (tps != null && tps.isNotEmpty) {
+        if (tps.length >= 3 && currentPrice >= tps[2]) return TradeStatus.hitTp3;
+        if (tps.length >= 2 && currentPrice >= tps[1]) return TradeStatus.hitTp2;
+        if (currentPrice >= tps[0]) return TradeStatus.hitTp1;
+      }
     }
-    return TradeStatus.active;
+
+    return reached;
   }
 
   Future<DailySignal> _generateNewSignal(String symbol) async {
