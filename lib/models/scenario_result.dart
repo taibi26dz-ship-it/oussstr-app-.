@@ -10,6 +10,7 @@ class ScenarioResult {
   final double? stopLoss;
   final List<double>? takeProfits;
   final String reason;
+  final DateTime? triggerTime;
 
   ScenarioResult({
     required this.type,
@@ -19,6 +20,7 @@ class ScenarioResult {
     this.stopLoss,
     this.takeProfits,
     required this.reason,
+    this.triggerTime,
   });
 
   static ScenarioResult none(ScenarioType type, String reason) => ScenarioResult(
@@ -58,6 +60,7 @@ class DailySignal {
         'entry': scenario.entry,
         'stopLoss': scenario.stopLoss,
         'takeProfits': scenario.takeProfits,
+        'triggerTime': scenario.triggerTime?.toIso8601String(),
         'strength': strength.toString(),
         'generatedAt': generatedAt.toIso8601String(),
         'notes': notes,
@@ -76,6 +79,7 @@ class DailySignal {
               ? (j['takeProfits'] as List).map((e) => (e as num).toDouble()).toList()
               : null,
           reason: j['notes'] ?? '',
+          triggerTime: j['triggerTime'] != null ? DateTime.parse(j['triggerTime']) : null,
         ),
         strength: SignalStrength.values.firstWhere((e) => e.toString() == j['strength']),
         generatedAt: DateTime.parse(j['generatedAt']),
