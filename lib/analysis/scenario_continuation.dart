@@ -58,6 +58,7 @@ class ScenarioContinuation {
       stopLoss: stopLoss,
       takeProfits: tps,
       reason: 'Higher-timeframe uptrend (HH+HL) with shallow pullback and bullish resumption',
+      triggerTime: last.closeTime,
     );
   }
 }
