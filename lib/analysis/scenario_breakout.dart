@@ -57,6 +57,7 @@ class ScenarioBreakout {
       stopLoss: stopLoss,
       takeProfits: tps,
       reason: 'Closed above range high with volume confirmed and RSI ${rsi.toStringAsFixed(1)}',
+      triggerTime: lastClosed.closeTime,
     );
   }
 }
