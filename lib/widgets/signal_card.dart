@@ -44,11 +44,12 @@ class SignalCard extends StatelessWidget {
   }
 
   String _formattedTime() {
-    final t = signal.generatedAt;
+    final t = signal.scenario.triggerTime ?? signal.generatedAt;
     final hour = t.hour.toString().padLeft(2, '0');
     final minute = t.minute.toString().padLeft(2, '0');
     final day = t.day.toString().padLeft(2, '0');
-    return 'يوم $day — الساعة $hour:$minute';
+    final suffix = signal.scenario.triggerTime != null ? ' (وقت تحقق الشرط فعلياً)' : '';
+    return 'يوم $day — الساعة $hour:$minute$suffix';
   }
 
   Widget _tradeStatusBanner() {
