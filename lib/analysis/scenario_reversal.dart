@@ -62,6 +62,7 @@ class ScenarioReversal {
       stopLoss: stopLoss,
       takeProfits: tps,
       reason: 'Liquidity sweep below range low, reversal candle confirmed back toward range high',
+      triggerTime: last.closeTime,
     );
   }
 }
