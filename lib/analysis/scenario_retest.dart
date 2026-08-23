@@ -61,6 +61,7 @@ class ScenarioRetest {
       stopLoss: stopLoss,
       takeProfits: tps,
       reason: 'Retraced into 60-70% fib zone after breakout, reversal candle confirmed',
+      triggerTime: last.closeTime,
     );
   }
 }
